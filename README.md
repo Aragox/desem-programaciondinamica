@@ -11,3 +11,5 @@ En este proyecto se evaluá el desempeño de 4 algoritmos:
 - alineaminento de secuencias (programación dinámica)
 
 Esto se logra mediante la programación y ejecución de estos algoritmos, midiendo el tiempo de ejecución, y anotando los resultados en un reporte.
+
+También se programan generadores de tests que producen archivos de entrada para los algoritmos.
