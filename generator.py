@@ -7,10 +7,7 @@ import random
 id_problema = 1 # Datos generales del generador
 nom_archivo = ""
 
-match = 1 # Datos para archivo de salida para secuencias
-missmatch = -1
-gap = -2
-letras = ['A','T','C','G']
+letras = ['A','T','C','G'] # Datos para archivo de salida para secuencias
 secuencia1 = ""
 secuencia2 = ""
 
@@ -39,7 +36,7 @@ def num_aleatorio(minimo, maximo):
 def imprimir_salida1():
     # Función que imprime/crea un test del algoritmo mochila en un archivo de salida 
     try: #Abrir archivo de salida
-        salida = open(str(nom_archivo) + '.txt', 'w')               
+        salida = open(str(nom_archivo), 'w')               
     except IOError:
         print ("\nError: No se logró crear o sobrescribir el archivo\n")
     else:
@@ -56,12 +53,11 @@ def imprimir_salida1():
 def imprimir_salida2():
     # Función que imprime la salida 
     try: #Abrir archivo de salida
-        salida = open(str(nom_archivo) + '.txt', 'w')               
+        salida = open(str(nom_archivo), 'w')               
     except IOError:
         print ("\nError: No se logró crear o sobrescribir el archivo\n")
     else:
         print ("\nArchivo creado o modificado exitosamente\n")
-        salida.write(str(match) + "," + str(missmatch) + "," + str(gap) + "\n")
         salida.write(str(secuencia1) + "\n")
         salida.write(str(secuencia2) + "\n") 
         salida.close()

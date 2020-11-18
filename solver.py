@@ -3,13 +3,24 @@
 import sys
 from fractions import Fraction
 from decimal import Decimal
-import copy 
+import copy
+from itertools import combinations
+from itertools import permutations 
 
-salida = None # Archivo de salida
+# Datos generales del solver
+salida = None # Archivo de salida 
+matriz = [] # Guarda los números
+id_problema = 1 # Determina el tipo de problema (mochila o alineamiento de secuencias)
+algoritmo = 1 # Determinar si se resuelve por algoritmo de fuerza bruta o programación dinámica
+nom_archivo = "" # Nombre de archivo de salida
 
- # Datos para archivo de salida
+# Variables para el problema de secuencias
+secuencia1 = ""
+secuencia2 = ""
+scorefinal = 0
+resultados = []
 
-matriz = [] # Guarda los números de la tabla actual
+# Variables para el problema de mochila
 
 ###########################################################################################################
 #----------------------------------------------------------------------------------------------------------
@@ -123,7 +134,7 @@ class Fraccion:
 
 ###########################################################################################################
 #----------------------------------------------------------------------------------------------------------
-#    Final de sección de código
+#Manual del programa (-h)
 #----------------------------------------------------------------------------------------------------------
 ###########################################################################################################
 
@@ -226,50 +237,111 @@ def buscar_fraccion(lst, f):
 
     return pos
     
-def imprimir_estado(valor):
-    # Función que imprime la salida 
-    salida.write("\n") 
+def imprimir_salida_alineamiento():
+    # Función que imprime la salida del problema de alineamiento de secuencias
+    try: #Abrir archivo de salida
+        salida = open(str(nom_archivo) + '_respuesta', 'w')               
+    except IOError:
+        print ("Error: No se logró crear o sobrescribir el archivo\n")
+    else:
+        print ("Archivo creado o modificado exitosamente\n")
+        
+        if (algoritmo == 1): #(F.Bruta)
+            
+            for elem in resultados:
+                if (elem[2] == scorefinal): # Imprimir sólo las comparaciones que empataron con el mejor puntaje
+                    print("".join(elem[0]) + ", " + "".join(elem[1]) + ", " + str(elem[2])) # Imprimir en terminal
+                    salida.write("".join(elem[0]) + ", " + "".join(elem[1]) + ", " + str(elem[2]) + "\n") # Guardar en archivo
+                    
+            print("") # Imprimir en terminal                
+            print("Score Final: "+ str(scorefinal))
+            print("Hilera1: "+ secuencia1)
+            print("Hilera2: "+ secuencia2)                
+            salida.write("\n") # Guardar en archivo 
+            salida.write("Score Final: "+ str(scorefinal) + "\n")
+            salida.write("Hilera1: "+ secuencia1 + "\n")
+            salida.write("Hilera2: "+ secuencia2 + "\n")
+
+        if (algoritmo == 2): #(P.Dinámica)
+            salida.write("\n")
+            
+        salida.close() # Cerrar archivo
+
+def puntajetotal(elem1, elem2):
+    # Función que retorna el puntaje correspondiente a comparar 2 secuencias (Para el algoritmo de fuerza bruta)
+    score = 0
+    for i in range(len(elem1)):
+        if (elem1[i] == elem2[i] and elem1[i] != '_'):
+            score = score + 1
+        elif (elem1[i] != elem2[i] and elem1[i] != '_' and elem2[i] != '_'):
+            score = score - 1
+        elif (elem1[i] == '_' and elem2[i] != '_'):
+            score = score - 2
+        elif (elem1[i] != '_' and elem2[i] == '_'):
+            score = score - 2
+        elif (elem1[i] == elem2[i] and elem1[i] == '_'):
+            score = score - 4
+    return score
+
+def mejor_resultado():
+    # Función que retorna una lista con la secuencia1 y la secuencia2 y la mayor puntuación
+    resultado = copy.deepcopy(resultados[0])
+    for i in range(len(resultados)):
+        if (resultados[i][2] > resultado[2]):
+            resultado = copy.deepcopy(resultados[i])
+            
+    return resultado           
     
+############################################################################################################################
+#---------------------------------------------------------------------------------------------------------------------------
+#MAIN
+#---------------------------------------------------------------------------------------------------------------------------
+############################################################################################################################     
 def main():
     
     global matriz # Para trabajar con variables globales
     global salida
+    global id_problema 
+    global algoritmo
+    global nom_archivo
     
-    arg_valido = True 
+    global secuencia1
+    global secuencia2
+    global scorefinal
 
-    if (len(sys.argv) == 3): #Si el número de argumentos es igual a 3
-        arg_valido = False # No se intentará resolver el problema del archivo
+    global resultados
+    
+    arg_valido = True
+
+    if (len(sys.argv) == 2 and sys.argv[1] == "-h"): #Si hay opción -h
+        arg_valido = False
+        manual()
+
+    elif (len(sys.argv) == 2 and sys.argv[1] != "-h"): #Si largo 2 pero no hay opción -h
+        arg_valido = False
+        print("\nPara ver 'ayuda' el argumento #2 debe ser '-h'\n")
+
+    if (len(sys.argv) == 4): #Si el número de argumentos es igual a 4
         
-        if (not(isinstance(sys.argv[1], str) and isinstance(sys.argv[2], str))): #Chequear tipos de argumento de línea de comandos
-            print("\nTipo equivocado de argumentos (Se requiere: string string string)\n")
+        if (not(sys.argv[1].isnumeric() and sys.argv[2].isnumeric() and isinstance(sys.argv[3], str))): #Chequear tipos de argumento de línea de comandos
+            print("\nTipo equivocado de argumentos (Para la 'resolución' se requiere: string int int string)\n")
+            arg_valido = False # Tipos equivocados
 
-        if (sys.argv[1] != "-h"): #De estar presente, ejecutar argumento -h
-            print("Argumento #2 debe ser '-h'\n")
-            
-        else:
-            manual()
-
-    if (len(sys.argv) == 2): #Si el número de argumentos es igual a 2
-    
-        if (not(isinstance(sys.argv[1], str))):
-            print("\nTipo equivocado de argumentos (Se requiere: string string)\n") #Chequear tipos de argumento de línea de comandos
-            arg_valido = False # Tipos equivocados 
-
-        if (sys.argv[1] == "-h"): #De estar presente, ejecutar argumento -h
-           arg_valido = False # Mostrar help
-           manual()         
-
-    if (len(sys.argv) > 3 or len(sys.argv) < 2):    
-        print("\nNúmero equivocado de argumentos (se requieren 2 o 3)\n")
+    if (len(sys.argv) != 2 and len(sys.argv) != 4):
         arg_valido = False # Número equivocado de argumentos
-    
+        print("\nNúmero equivocado de argumentos (Para 'ayuda' se requieren 2, para la 'resolución' se requieren 4)\n")
+        
         if (len(sys.argv) == 1): # Si no se agregaron argumentos además del nombre del programa
             print("Sólo se recibió el nombre del programa\n")
-    
+
     if (arg_valido): #El número y tipo de los argumentos es válido
+       id_problema = int(sys.argv[1]) # Obtener datos de línea de comandos
+       algoritmo = int(sys.argv[2])
+       nom_archivo = sys.argv[3]
+        
        lineas = []
        try:
-           entrada = open(sys.argv[1],"r")        
+           entrada = open(sys.argv[3],"r")        
            lineas = entrada.readlines() # Obtiene todas las líneas del archivo de entrada        
        except IOError:
           print ("\nError: No se logró encontrar el archivo\n")
@@ -279,12 +351,82 @@ def main():
         
        for i in range(len(lineas)): # Quitar comillas de las lineas
            lineas[i] = lineas[i].split(',')
-            
-#        variables_problema = int(lineas[0][2]) # Obtener el número de las variables del problema
+
+       if (id_problema == 1 and algoritmo == 1): # Mochila (F.Bruta)
+           print("No implementado aún\n")
+           
+       if (id_problema == 1 and algoritmo == 2): # Mochila (P.Dinámica)
+           print("No implementado aún\n")
+           
+       if (id_problema == 2): # Alineamiento de Secuencias
+           secuencias = []          
+           for line in lineas: # Obtener secuencias
+               str1 = " "
+               elem = str1.join(line)
+               secuencias.append(elem.rstrip())
+
+           secuencia1 = secuencias[0]
+           secuencia2 = secuencias[1]
+           
+           if (algoritmo == 1): #(F.Bruta)
+               mayor = len(secuencia2) # Guarda el largo de la secuencia de entrada más corta
+               
+               if (len(secuencia1) > len(secuencia2)):
+                   mayor = len(secuencia1)
+                   
+               k = len(secuencia1) + len(secuencia2) # Obtener el número máximo de gaps
+               
+               resultados = [] # Contiene todas las comparaciones entre permutaciones y sus puntajes respectivos
+               while (k >= mayor): # Probar con diferente número de gaps
+                   gaps1 = k - len(secuencia1) # Obtener número de gaps a permutar
+                   gaps2 = k - len(secuencia2)
+                   perm1 = list(set(permutations(('A'*len(secuencia1)) + ('_'*gaps1)))) # Permutar largo de la secuencia (un mismo símbolo) + gaps, y remover permutaciones repetidas
+                   cont = 0
+                   for i in range(len(perm1)): # Sustituir símbolos repetidos por bases nitrogenadas de la secuencia1
+                       perm1[i] = list(perm1[i]) # Convertir tupla a lista
+                       for j in range(len(perm1[0])):
+                           if (perm1[i][j] == 'A'):
+                               perm1[i][j] = secuencia1[cont]
+                               cont = cont + 1
+                       cont = 0
+                   perm2 = list(set(permutations(('A'*len(secuencia2)) + ('_'*gaps2)))) # Permutar largo de la secuencia (un mismo símbolo) + gaps, y remover permutaciones repetidas
+                   cont = 0
+                   for i in range(len(perm2)): # Sustituir símbolos repetidos por bases nitrogenadas de la secuencia2
+                       perm2[i] = list(perm2[i]) # Convertir tupla a lista
+                       for j in range(len(perm2[0])):
+                           if (perm2[i][j] == 'A'):
+                               perm2[i][j] = secuencia2[cont]
+                               cont = cont + 1
+                       cont = 0
+                   for elem1 in perm1: # Comparar las secuencias obtenidas de cada permutación
+                       for elem2 in perm2:
+                           puntaje = puntajetotal(elem1, elem2) # Obtener el puntaje de la comparación de 2 secuencias 
+                           resultado = [elem1, elem2, puntaje]
+                           resultados.append(resultado) # Guardar las secuencias que se compararon y el puntaje respectivo
+                           
+                   k = k - 1                       
+#                   print("Permutaciones secuencia1 con gaps="+str(gaps1)) # Imprimir las permutaciones con distinta cantidad de gaps
+#                   for i in perm1:
+#                       print(i)
+#                   print("Permutaciones secuencia2 con gaps="+str(gaps2))
+#                   for i in perm2:
+#                       print(i)
+
+                       
+               resfinal = mejor_resultado() # Obtener el alineamiento con el mayor puntaje
+               secuencia1 = "".join(resfinal[0])
+               secuencia2 = "".join(resfinal[1])
+               scorefinal = resfinal[2]
+                   
+               imprimir_salida_alineamiento() # Guardar en archivo de salida 
+               
+           if (algoritmo == 2): #(P.Dinámica)
+               print("No implementado aún\n")
+
 
     #Imprimir datos de línea de comandos
     n = len(sys.argv) 
-    print("Total de argumentos pasados:", n) 
+    print("\nTotal de argumentos pasados:", n) 
   
     print("\nArgumentos pasados:", end = " ") 
     for i in range(0, n): 
