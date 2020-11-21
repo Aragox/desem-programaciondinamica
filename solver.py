@@ -10,6 +10,8 @@ from itertools import permutations
 # Datos generales del solver
 salida = None # Archivo de salida 
 matriz = [] # Guarda los números
+vector1 = [] #Vector de filas
+vector2 = [] #Vector de columnas
 id_problema = 1 # Determina el tipo de problema (mochila o alineamiento de secuencias)
 algoritmo = 1 # Determinar si se resuelve por algoritmo de fuerza bruta o programación dinámica
 nom_archivo = "" # Nombre de archivo de salida
@@ -24,7 +26,7 @@ resultados = []
 
 ###########################################################################################################
 #----------------------------------------------------------------------------------------------------------
-#   Clase Fracción y métodos
+#   Clase Fracción 
 #   Se usó de referencia la clase "Fraction" implementada por msarialp en https://gist.github.com/mustaa/2350807
 #----------------------------------------------------------------------------------------------------------
 ##########################################################################################################
@@ -131,10 +133,46 @@ class Fraccion:
             return str(self.num)
         else:
             return '%s/%s' %(self.num, self.denom)
-
+        
 ###########################################################################################################
 #----------------------------------------------------------------------------------------------------------
-#Manual del programa (-h)
+#   Clase Nodo
+#----------------------------------------------------------------------------------------------------------
+##########################################################################################################        
+class Nodo:
+#Clase Fracción
+    def __init__(self, valor, diag, izq, arriba):
+        # Constructor, asigna el valor al nodo y las direcciones
+        self.valor = valor
+        self.dir = [diag,izq,arriba]
+            
+    def get_valor(self):
+        #Función que retorna el valor del nodo
+        return self.valor
+
+    def get_dir(self):
+        #Función que retorna el vector de direcciones del nodo
+        return self.dir
+
+    def get_diagonal(self):
+        #Función que retorna la dirección diagonal
+        return self.dir[0]
+        
+    def get_izquierda(self):
+        #Función que retorna la dirección izquierda
+        return self.dir[1]
+
+    def get_arriba(self):
+        #Función que retorna la dirección arriba
+        return self.dir[2]
+
+    def set_valor(self, valor):
+        #Función que setea el valor del nodo
+        self.valor = valor
+        
+###########################################################################################################
+#----------------------------------------------------------------------------------------------------------
+#   Manual del programa (-h)
 #----------------------------------------------------------------------------------------------------------
 ###########################################################################################################
 
@@ -198,15 +236,36 @@ def manual():
     print("\n")
     
 def inicializar_matriz():
-    #Función que inicializa la matriz con ceros
+    #Función que inicializa la matriz con fracciones de la forma: 0/1
     global matriz
     matriz=[] #Vaciar matriz
     
-    for i in range(len(nombre_filas)): #Total de filas
+    for i in range(len(vector1)): #Total de filas
         row=[] #Fila
-        for j in range(len(nombre_columnas) - 1): #Total de columnas
+        for j in range(len(vector2)): #Total de columnas
             row.append(Fraccion(0,1)) #Añadir Fracción 0/1 para cada columna de esta fila
         matriz.append(row) #Añadir fila definida a la matriz
+
+def inicializar_matriz_nodos():
+    #Función que inicializa la matriz con nodos de valor cero y vector de direcciones [0,0,0]
+    global matriz
+    matriz=[] #Vaciar matriz
+    
+    for i in range(len(vector1)): #Total de filas
+        row=[] #Fila
+        for j in range(len(vector2)): #Total de columnas
+            row.append(Nodo(0,0,0,0)) #Añadir valores para cada columna de esta fila
+        matriz.append(row) #Añadir fila definida a la matriz
+
+def imprimir_matriz():
+    # Función que imprime en terminal la variable global matriz, en un formato más agradable
+    for i in range(len(matriz)):
+        for j in range(len(matriz[0])):
+            if (isinstance(matriz[0][0], Fraccion)): # Si el objeto es una fracción
+                print(matriz[i][j].__str__()+ " ", end = '')
+            elif (isinstance(matriz[0][0], Nodo)):  # Si el objeto es un nodo
+                print(str(matriz[i][j].get_valor())+ " ", end = '')
+        print("")
 
 def menor_fraccion(lst):
     #Función que retorna el objeto fracción correspondiente al valor menor de una lista de fracciones
@@ -217,14 +276,6 @@ def menor_fraccion(lst):
             menor = elem
 
     return menor
-
-def menor_coeficienteObjetivo():
-    #Función que retorna la posición del coeficiente mínimo de la función objetivo,
-    #lo que permite obtener la posición de la columna pivote
-    res = copy.deepcopy(matriz[0])
-    fila = res[:len(res)-1] # No se incluye la columna LD
-    f = menor_fraccion(fila)
-    return buscar_fraccion(fila, f) # Retorno la posición de la fracción en la columna
 
 def buscar_fraccion(lst, f):
     #Función que retorna el índice de la posición de una fracción si la encuentra en la lista
@@ -238,9 +289,9 @@ def buscar_fraccion(lst, f):
     return pos
     
 def imprimir_salida_alineamiento():
-    # Función que imprime la salida del problema de alineamiento de secuencias
+    # Función que imprime la salida del problema de alineamiento de secuencias para fuerza bruta
     try: #Abrir archivo de salida
-        salida = open(str(nom_archivo) + '_respuesta', 'w')               
+        salida = open(str(nom_archivo) + '_respFB', 'w')               
     except IOError:
         print ("Error: No se logró crear o sobrescribir el archivo\n")
     else:
@@ -267,6 +318,19 @@ def imprimir_salida_alineamiento():
             
         salida.close() # Cerrar archivo
 
+def comparacion(indice1,indice2):
+    #Función que compara 2 caracteres obtenidos de 2 vectores, y retorna una puntuación (Para el algoritmo de programación dinámica)
+    if (vector1[indice1] == vector2[indice2]):
+        return 1
+    return -1
+
+def string_reverso(s):
+    # Función que retorna un string en orden al revés.
+    s1 = ""
+    for i in s:
+        s1 = i + s1
+    return s1
+    
 def puntajetotal(elem1, elem2):
     # Función que retorna el puntaje correspondiente a comparar 2 secuencias (Para el algoritmo de fuerza bruta)
     score = 0
@@ -294,12 +358,14 @@ def mejor_resultado():
     
 ############################################################################################################################
 #---------------------------------------------------------------------------------------------------------------------------
-#MAIN
+#   MAIN
 #---------------------------------------------------------------------------------------------------------------------------
 ############################################################################################################################     
 def main():
     
     global matriz # Para trabajar con variables globales
+    global vector1
+    global vector2
     global salida
     global id_problema 
     global algoritmo
@@ -351,24 +417,38 @@ def main():
         
        for i in range(len(lineas)): # Quitar comillas de las lineas
            lineas[i] = lineas[i].split(',')
-
+           
+#---------------------------------------------------------------------------------------------------------------------------
+#   Mochila (F.Bruta)
+#---------------------------------------------------------------------------------------------------------------------------
        if (id_problema == 1 and algoritmo == 1): # Mochila (F.Bruta)
            print("No implementado aún\n")
-           
+#---------------------------------------------------------------------------------------------------------------------------
+#   Mochila (P.Dinámica)
+#---------------------------------------------------------------------------------------------------------------------------           
        if (id_problema == 1 and algoritmo == 2): # Mochila (P.Dinámica)
            print("No implementado aún\n")
-           
+############################################################################################################################
+#---------------------------------------------------------------------------------------------------------------------------
+#   Ejecución alineamiento de secuencias
+#---------------------------------------------------------------------------------------------------------------------------
+############################################################################################################################
        if (id_problema == 2): # Alineamiento de Secuencias
-           secuencias = []          
-           for line in lineas: # Obtener secuencias
+           
+           secuencias = []
+           
+           for line in lineas: # Obtener secuencias en forma de string
                str1 = " "
                elem = str1.join(line)
                secuencias.append(elem.rstrip())
-
+               
            secuencia1 = secuencias[0]
            secuencia2 = secuencias[1]
-           
+#---------------------------------------------------------------------------------------------------------------------------
+#   Alineamiento de secuencias (F.Bruta)
+#---------------------------------------------------------------------------------------------------------------------------           
            if (algoritmo == 1): #(F.Bruta)
+               
                mayor = len(secuencia2) # Guarda el largo de la secuencia de entrada más corta
                
                if (len(secuencia1) > len(secuencia2)):
@@ -404,14 +484,7 @@ def main():
                            resultado = [elem1, elem2, puntaje]
                            resultados.append(resultado) # Guardar las secuencias que se compararon y el puntaje respectivo
                            
-                   k = k - 1                       
-#                   print("Permutaciones secuencia1 con gaps="+str(gaps1)) # Imprimir las permutaciones con distinta cantidad de gaps
-#                   for i in perm1:
-#                       print(i)
-#                   print("Permutaciones secuencia2 con gaps="+str(gaps2))
-#                   for i in perm2:
-#                       print(i)
-
+                   k = k - 1 # Reducir K                     
                        
                resfinal = mejor_resultado() # Obtener el alineamiento con el mayor puntaje
                secuencia1 = "".join(resfinal[0])
@@ -419,10 +492,93 @@ def main():
                scorefinal = resfinal[2]
                    
                imprimir_salida_alineamiento() # Guardar en archivo de salida 
-               
+#---------------------------------------------------------------------------------------------------------------------------
+#   Alineamiento de secuencias (P.Dinámica)
+#---------------------------------------------------------------------------------------------------------------------------               
            if (algoritmo == 2): #(P.Dinámica)
-               print("No implementado aún\n")
+               s1 = copy.deepcopy(secuencia1) # Hacer copia profunda
+               s2 = copy.deepcopy(secuencia2)
+               
+               vector1 = list(' '+s2) # Agregar el caracter vacío al inicio de los vectores
+               vector2 = list(' '+s1)
+               
+               inicializar_matriz_nodos() #inicializar matriz con nodos
 
+               cont = 0
+               for i in range(len(vector2)): # Asignar los nodos que resultan de incluir vacío en una comparación
+                   matriz[0][i] = Nodo(-1*cont,0,1,0)
+                   cont = cont + 2
+                   
+               cont = 0
+               for i in range(len(vector1)): # Asignar los nodos que resultan de incluir vacío en una comparación
+                   matriz[i][0] = Nodo(-1*cont,0,0,1)
+                   cont = cont + 2
+
+               cont1 = 1
+               while (cont1 < len(vector1)):
+                   cont2 = 1
+                   while (cont2 < len(vector2)):
+                       res1 = matriz[cont1 - 1][cont2 - 1].get_valor() + comparacion(cont1,cont2)
+                       res2 = matriz[cont1][cont2 - 1].get_valor() + -2
+                       res3 = matriz[cont1 - 1][cont2].get_valor() + -2
+                       vector = [res1, res2, res3]
+                       
+                       mayor = max(res1, res2, res3)
+                       
+                       matriz[cont1][cont2] = Nodo(mayor,0,0,0)
+                       for i in range(3):
+                           if (mayor == vector[i]):
+                               matriz[cont1][cont2].dir[i] = 1
+                                                                   
+                       cont2 = cont2 + 1
+                       
+                   cont1 = cont1 + 1
+                   
+               imprimir_matriz() # Imprimir matriz
+               
+               print("")
+               for i in range(len(matriz)):
+                   for j in range(len(matriz[0])):
+                       if (isinstance(matriz[0][0], Fraccion)): # Si el objeto es una fracción
+                           print(matriz[i][j].__str__()+ " ", end = '')
+                       elif (isinstance(matriz[0][0], Nodo)):  # Si el objeto es un nodo
+                           print(str(matriz[i][j].get_valor())+"/"+str(matriz[i][j].get_dir()), end = '')
+                   print("")
+                   
+               secuencia1 = ""
+               secuencia2 = "" 
+               cont1 = len(matriz) - 1
+               cont2 = len(matriz[0]) - 1
+               print("\nvector1 = "+str(vector1))
+               print("vector2 = "+str(vector2)) 
+               while (cont1 > 0 or cont2 > 0):
+                   print("------------------------")
+                   print("vector1["+str(cont1)+"] = "+str(vector1[cont1])) 
+                   print("vector2["+str(cont2)+"] = "+str(vector2[cont2]))                             
+                   if (matriz[cont1][cont2].get_diagonal()==1):
+                       print("Diagonal: "+str(matriz[cont1][cont2].get_diagonal()))
+                       secuencia1 = secuencia1 + vector2[cont2]
+                       secuencia2 = secuencia2 + vector1[cont1]
+                       cont1 = cont1 - 1
+                       cont2 = cont2 - 1
+                   elif (matriz[cont1][cont2].get_izquierda()==1):
+                         print("Izquierda: "+str(matriz[cont1][cont2].get_izquierda()))                       
+                         secuencia1 = secuencia1 + vector2[cont2]
+                         secuencia2 = secuencia2 + "_"                        
+                         cont2 = cont2 - 1
+                   elif (matriz[cont1][cont2].get_arriba()==1):
+                         print("Arriba: "+str(matriz[cont1][cont2].get_arriba()))                        
+                         secuencia1 = secuencia1 + "_"
+                         secuencia2 = secuencia2 + vector1[cont1]                        
+                         cont1 = cont1 - 1
+                   print(secuencia1)
+                   print(secuencia2)
+                   print("------------------------")
+
+               print("")
+               print(string_reverso(secuencia1))
+               print(string_reverso(secuencia2))
+#                    if (i == 0 and j == 0):
 
     #Imprimir datos de línea de comandos
     n = len(sys.argv) 
