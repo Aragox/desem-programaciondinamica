@@ -5,7 +5,8 @@ from fractions import Fraction
 from decimal import Decimal
 import copy
 from itertools import combinations
-from itertools import permutations 
+from itertools import permutations
+import csv
 
 # Datos generales del solver
 salida = None # Archivo de salida 
@@ -291,32 +292,57 @@ def buscar_fraccion(lst, f):
 def imprimir_salida_alineamiento():
     # Función que imprime la salida del problema de alineamiento de secuencias para fuerza bruta
     try: #Abrir archivo de salida
-        salida = open(str(nom_archivo) + '_respFB', 'w')               
+        salida = open(str(nom_archivo) + '_AS_respFB', 'w')               
     except IOError:
         print ("Error: No se logró crear o sobrescribir el archivo\n")
     else:
         print ("Archivo creado o modificado exitosamente\n")
-        
-        if (algoritmo == 1): #(F.Bruta)
             
-            for elem in resultados:
-                if (elem[2] == scorefinal): # Imprimir sólo las comparaciones que empataron con el mejor puntaje
-                    print("".join(elem[0]) + ", " + "".join(elem[1]) + ", " + str(elem[2])) # Imprimir en terminal
-                    salida.write("".join(elem[0]) + ", " + "".join(elem[1]) + ", " + str(elem[2]) + "\n") # Guardar en archivo
+        for elem in resultados:
+            if (elem[2] == scorefinal): # Imprimir sólo las comparaciones que empataron con el mejor puntaje
+                print("".join(elem[0]) + ", " + "".join(elem[1]) + ", " + str(elem[2])) # Imprimir en terminal
+                salida.write("".join(elem[0]) + ", " + "".join(elem[1]) + ", " + str(elem[2]) + "\n") # Guardar en archivo
                     
-            print("") # Imprimir en terminal                
-            print("Score Final: "+ str(scorefinal))
-            print("Hilera1: "+ secuencia1)
-            print("Hilera2: "+ secuencia2)                
-            salida.write("\n") # Guardar en archivo 
-            salida.write("Score Final: "+ str(scorefinal) + "\n")
-            salida.write("Hilera1: "+ secuencia1 + "\n")
-            salida.write("Hilera2: "+ secuencia2 + "\n")
-
-        if (algoritmo == 2): #(P.Dinámica)
-            salida.write("\n")
+        print("") # Imprimir en terminal                
+        print("Score Final: "+ str(scorefinal))
+        print("Hilera1: "+ secuencia1)
+        print("Hilera2: "+ secuencia2)                
+        salida.write("\n") # Guardar en archivo 
+        salida.write("Score Final: "+ str(scorefinal) + "\n")
+        salida.write("Hilera1: "+ secuencia1 + "\n")
+        salida.write("Hilera2: "+ secuencia2 + "\n")
             
         salida.close() # Cerrar archivo
+
+def imprimir_salida_alineamiento2():
+    # Función que imprime la salida del problema de alineamiento de secuencias para programación dinámica.
+    # Imprime una parte de la salida en la terminal, y otra en una tabla .csv
+    # (Se usó de referencia código de https://www.geeksforgeeks.org/writing-csv-files-in-python/)
+
+    print("") # Imprimir en terminal                
+    print("Score Final: "+ str(scorefinal))
+    print("Hilera1: "+ secuencia1)
+    print("Hilera2: "+ secuencia2) 
+    
+    # Nombres de campos
+    campos = list(" ") + vector2  
+    
+    # Filas del archivo csv 
+    filas = []
+    for i in range(len(matriz)):
+        contenido = []
+        for j in range(len(matriz[0])):
+            contenido.append(str(matriz[i][j].get_valor()))
+        filas.append(list(vector1[i]) + contenido)
+    
+    # Nombre del archivo csv   
+    filename = str(nom_archivo) + '_AS_respPD.csv'
+    
+    # Escribir en archivo csv  
+    with open(filename, 'w') as csvfile:  
+        csvwriter = csv.writer(csvfile)  
+        csvwriter.writerow(campos)   
+        csvwriter.writerows(filas)
 
 def comparacion(indice1,indice2):
     #Función que compara 2 caracteres obtenidos de 2 vectores, y retorna una puntuación (Para el algoritmo de programación dinámica)
@@ -575,10 +601,12 @@ def main():
                    print(secuencia2)
                    print("------------------------")
 
-               print("")
-               print(string_reverso(secuencia1))
-               print(string_reverso(secuencia2))
-#                    if (i == 0 and j == 0):
+               secuencia1 = string_reverso(secuencia1)
+               secuencia2 = string_reverso(secuencia2)
+
+               scorefinal = matriz[len(matriz)-1][len(matriz[0])-1].get_valor() # Obtener score final del alineamiento
+
+               imprimir_salida_alineamiento2() # Guardar en archivo de salida 
 
     #Imprimir datos de línea de comandos
     n = len(sys.argv) 
