@@ -17,124 +17,47 @@ id_problema = 1 # Determina el tipo de problema (mochila o alineamiento de secue
 algoritmo = 1 # Determinar si se resuelve por algoritmo de fuerza bruta o programación dinámica
 nom_archivo = "" # Nombre de archivo de salida
 
+# Variables para el problema de mochila
+lista_objetos = []
+peso_max = -1
+beneficio_max = -1
+
 # Variables para el problema de secuencias
 secuencia1 = ""
 secuencia2 = ""
 scorefinal = 0
+
 resultados = []
-
-# Variables para el problema de mochila
-
+        
 ###########################################################################################################
 #----------------------------------------------------------------------------------------------------------
-#   Clase Fracción 
-#   Se usó de referencia la clase "Fraction" implementada por msarialp en https://gist.github.com/mustaa/2350807
+#   Clase Ítem
 #----------------------------------------------------------------------------------------------------------
-##########################################################################################################
-def gcd(num, denom):
-#Función que retorna el máximo común divisor
-    if (num == 0 or denom == 0):
-        return 1
-    
-    while num != denom:
-        if num > denom:
-            num = num - denom
-        else:
-            denom = denom - num
-    return num
-
-class Fraccion:
+##########################################################################################################        
+class Articulo:
 #Clase Fracción
-    def __init__(self, num, denom):
-        # Constructor, recibe el numerador y denominador, para luego simplificar la fracción
-        self.simplificar(num, denom)
-        
-    def simplificar(self, num, denom):
-        # Función que simplifica la fracción usando el máximo común divisor. Asigna los nuevos valores al numerador y denominador
-        self.num = int(num / gcd(abs(num), abs(denom)))
-        self.denom = int(denom / gcd(abs(num), abs(denom)))
-        if self.denom < 0:
-            self.denom = abs(self.denom)
-            self.num = -1*self.num
-        elif self.denom == 0:
-            raise ZeroDivisionError
-        elif self.num == 0:
-            self.denom = 1
+    def __init__(self, tipo, peso, beneficio):
+        # Constructor, asigna el tipo de articulo como entero, el peso como entero y el beneficio como entero
+        self.tipo = tipo
+        self.peso = peso
+        self.beneficio = beneficio
             
-    def simplificar_nomod(self, num, denom):
-        # Función que simplifica la fracción (sin modificar al asignar) usando el máximo común divisor.
-        #Retorna los nuevos valores al numerador y denominador en una tupla
-        num1 = int(num / gcd(abs(num), abs(denom))) # Simplificar numerador y denominador
-        denom1 = int(denom / gcd(abs(num), abs(denom)))
-        if denom1 < 0: # Posibles cambios de signo de numerador y denominador
-            denom1 = abs(denom1)
-            num1 = -1*num1
-        elif denom1 == 0: # Se indefine la fracción
-            raise ZeroDivisionError
-        elif num1 == 0:
-            denom1 = 1
-        return num1, denom1 # Retornar tupla
-        
-    def sum(self, other):
-        # Función que suma 2 fracciones. Actualiza el resultado en la fracción izquierda 
-        num = self.num*other.denom + self.denom*other.num
-        denom = self.denom*other.denom
-        self.simplificar(num, denom)
-    
-    def sub(self, other):
-        # Función que resta 2 fracciones. Actualiza el resultado en la fracción izquierda
-        num = self.num*other.denom - self.denom*other.num
-        denom = self.denom*other.denom
-        self.simplificar(num, denom)
+    def get_tipo(self):
+        #Función que retorna el tipo del artículo
+        return self.tipo
 
-    def sub_nomod(self, other):
-        # Función que resta 2 fracciones. No realiza modificaciones a la fracción izquierda. Retorna una tupla [numerador,denominador] simplificados
-        num = self.num*other.denom - self.denom*other.num # Guardar resultado de la resta
-        denom = self.denom*other.denom
-        return self.simplificar_nomod(num, denom) # Retornar tupla
-    
-    def mul(self, other):
-        # Función que multiplica 2 fracciones. Actualiza el resultado en la fracción izquierda
-        num = self.num*other.num
-        denom = self.denom*other.denom
-        self.simplificar(num, denom)
-    
-    def div(self, other):
-        # Función que divide 2 fracciones. Actualiza el resultado en la fracción izquierda
-        num = self.num*other.denom
-        denom = self.denom*other.num
-        self.simplificar(num, denom)
+    def get_peso(self):
+        #Función que retorna el peso del artículo
+        return self.peso
 
-    def div_nomod(self, other):
-        # Función que divide 2 fracciones. No realiza modificaciones a la fracción izquierda. Retorna una tupla [numerador,denominador] simplificados
-        num = self.num*other.denom # Guardar resultado de la división
-        denom = self.denom*other.num
-        return self.simplificar_nomod(num, denom) # Retornar tupla
-
-    def comparar(self, other):
-        # Función que compara 2 fracciones para determinar cuál es mayor.
-        #No realiza modificaciones. Retorna True si la fracción de la derecha es mayor, y False en caso contrario
-        tupla = self.sub_nomod(other)
-        numero = tupla[0]
-        if (numero >= 0):
-            return False
-        return True
-
-    def get_num(self):
-        #Función que retorna el numerador de la fracción
-        return self.num
-
-    def get_denom(self):
-        #Función que retorna el denominador de la fracción
-        return self.denom    
+    def get_beneficio(self):
+        #Función que retorna el beneficio del artículo
+        return self.beneficio
 
     def __str__(self):
-        # Función que retorna la fracción como un string 
-        if self.denom == 1 or self.num == 0:
-            return str(self.num)
-        else:
-            return '%s/%s' %(self.num, self.denom)
-        
+        # Función que retorna el artículo como un string
+        return '[%s, %s, %s]' %(self.tipo, self.peso, self.beneficio)
+    
 ###########################################################################################################
 #----------------------------------------------------------------------------------------------------------
 #   Clase Nodo
@@ -169,8 +92,7 @@ class Nodo:
 
     def set_valor(self, valor):
         #Función que setea el valor del nodo
-        self.valor = valor
-        
+        self.valor = valor     
 ###########################################################################################################
 #----------------------------------------------------------------------------------------------------------
 #   Manual del programa (-h)
@@ -267,28 +189,44 @@ def imprimir_matriz():
             elif (isinstance(matriz[0][0], Nodo)):  # Si el objeto es un nodo
                 print(str(matriz[i][j].get_valor())+ " ", end = '')
         print("")
+        
+def imprimir_salida_mochila(resultado):
+    # Función que imprime la salida del problema de mochila para fuerza bruta
+    global beneficio_max
 
-def menor_fraccion(lst):
-    #Función que retorna el objeto fracción correspondiente al valor menor de una lista de fracciones
-    menor = lst[0]
-    for i in range(len(lst)):
-        elem = lst[i]
-        if (Fraccion.comparar(elem, menor)): # Si menor actual es mayor que el elem
-            menor = elem
+    if resultado:
+        beneficio_max = resultado[0]
+        cont_id = 1
+        cont_articulos = 0
+        articulos = [] # Lista de pares ordenados de valores con la forma: [tipo artículo, cantidad del artículo]
+        resultado = resultado[1:]
 
-    return menor
+        for i in range(len(resultado)): # Obtener pares ordenados
+            if (resultado[i] == cont_id):
+                cont_articulos = cont_articulos + 1 
+            else:
+                articulos.append([cont_id, cont_articulos])
+                cont_id = resultado[i]
+                cont_articulos = 1
+                
+        articulos.append([cont_id, cont_articulos]) # Agregar el par ordenado faltante
+        
+        try: #Abrir archivo de salida
+           salida = open(str(nom_archivo) + '_M_respFB', 'w')               
+        except IOError:
+            print ("Error: No se logró crear o sobrescribir el archivo\n")
+        else:
+            print ("Archivo creado o modificado exitosamente\n")
+             
+            print(beneficio_max) # Imprimir solución en terminal y en archivo de salida
+            salida.write(str(beneficio_max) + "\n")
+            for i in range(len(articulos)):
+                print(str(articulos[i][0]) + "," + str(articulos[i][1]) + " #articulo " + str(articulos[i][0]) + " " + str(articulos[i][1]) + " unidades")
+                salida.write(str(articulos[i][0]) + "," + str(articulos[i][1]) + " #articulo " + str(articulos[i][0]) + " " + str(articulos[i][1]) + " unidades" + "\n")
+            
+    else:
+        print("No hay artículos definidos correctamente en el archivo de entrada")
 
-def buscar_fraccion(lst, f):
-    #Función que retorna el índice de la posición de una fracción si la encuentra en la lista
-    #En caso contrario retorna -1
-    pos = -1
-    for j in range(len(lst)):
-        if ((lst[j].get_num() == f.get_num()) and (lst[j].get_denom() == f.get_denom())):
-            pos = j
-            break
-
-    return pos
-    
 def imprimir_salida_alineamiento():
     # Función que imprime la salida del problema de alineamiento de secuencias para fuerza bruta
     try: #Abrir archivo de salida
@@ -396,11 +334,14 @@ def main():
     global id_problema 
     global algoritmo
     global nom_archivo
+
+    global lista_objetos
+    global peso_max
+    global beneficio_max
     
     global secuencia1
     global secuencia2
     global scorefinal
-
     global resultados
     
     arg_valido = True
@@ -444,16 +385,64 @@ def main():
        for i in range(len(lineas)): # Quitar comillas de las lineas
            lineas[i] = lineas[i].split(',')
            
+############################################################################################################################
+#---------------------------------------------------------------------------------------------------------------------------
+#   Ejecución Mochila
+#---------------------------------------------------------------------------------------------------------------------------
+############################################################################################################################
+       if (id_problema == 1): # Mochila
+           peso_max = int(lineas[0][0])
+           cont = 1
+           while (cont < len(lineas)):
+               peso = int(lineas[cont][0])
+               beneficio = int(lineas[cont][1])
+               cantidad = int(lineas[cont][2])
+               for i in range(cantidad):
+                   lista_objetos.append(Articulo(cont,peso,beneficio))
+               cont = cont + 1
+
 #---------------------------------------------------------------------------------------------------------------------------
 #   Mochila (F.Bruta)
 #---------------------------------------------------------------------------------------------------------------------------
-       if (id_problema == 1 and algoritmo == 1): # Mochila (F.Bruta)
-           print("No implementado aún\n")
+           if (algoritmo == 1): # (F.Bruta)
+               combinaciones = [] # Guarda las combinaciones de los artículos
+               for i in list(range(len(lista_objetos))): # Guardar todas las combinaciones de distinto largo
+                   combinaciones.append(combinations(lista_objetos, i+1))
+               combinaciones = [i for fila in combinaciones for i in fila] # Aplanar la lista de combinaciones
+
+               resultados = []
+               for i in range(len(combinaciones)): # Obtener el mejor resultado
+                   sumapeso = 0
+                   sumabeneficio = 0
+                   tipos = []
+                   combinaciones[i] = list(combinaciones[i]) # Convertir de tupla a lista
+                   for j in range(len(combinaciones[i])):
+                       tipos.append(combinaciones[i][j].get_tipo()) # Guardar el tipo del artículo
+                       sumapeso = sumapeso + combinaciones[i][j].get_peso() # Acumula peso
+                       sumabeneficio = sumabeneficio + combinaciones[i][j].get_beneficio() # Acumula beneficio
+                       
+                   if (sumapeso <= peso_max): # Si el peso acumulado es menor o igual al peso máximo soportado
+                       tipos.sort() # Ordenar ascendentemente los tipos de artículos
+                       resultados.append([sumabeneficio] + tipos) # Guardar el beneficio acumulado y los artículos utilizados
+                       
+               mejorcombinacion = [] # Guarda el mejor resultado para el problema de la mochila       
+               if resultados: # Si resultados no está vacío
+                   mejorcombinacion = copy.deepcopy(resultados[0])
+                   
+               for i in range(len(resultados)): # Obtener el mejor resultado para el problema de la mochila
+                   if (resultados[i][0] > mejorcombinacion[0]): # Si hay una mejor solución
+                       mejorcombinacion = copy.deepcopy(resultados[i])
+
+#               for i in range(len(mejorcombinacion)): # Imprimir el mejor resultado
+#                   print(str(mejorcombinacion[i]), end=' ')
+
+               imprimir_salida_mochila(mejorcombinacion) # Guardar en archivo de salida
+                       
 #---------------------------------------------------------------------------------------------------------------------------
 #   Mochila (P.Dinámica)
-#---------------------------------------------------------------------------------------------------------------------------           
-       if (id_problema == 1 and algoritmo == 2): # Mochila (P.Dinámica)
-           print("No implementado aún\n")
+#---------------------------------------------------------------------------------------------------------------------------                  
+           if (algoritmo == 2): # (P.Dinámica)
+               print("No implementado aún\n")
 ############################################################################################################################
 #---------------------------------------------------------------------------------------------------------------------------
 #   Ejecución alineamiento de secuencias
