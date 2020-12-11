@@ -196,23 +196,35 @@ def imprimir_salida_mochila(resultado):
 
     if resultado:
         beneficio_max = resultado[0]
-        cont_id = 1
-        cont_articulos = 0
         articulos = [] # Lista de pares ordenados de valores con la forma: [tipo artículo, cantidad del artículo]
         resultado = resultado[1:]
-
-        for i in range(len(resultado)): # Obtener pares ordenados
+        cont_id = resultado[0]
+        cont_articulos = 0
+        
+        i = 0
+        while (i < len(resultado)): # Obtener pares ordenados
             if (resultado[i] == cont_id):
-                cont_articulos = cont_articulos + 1 
+                cont_articulos = cont_articulos + 1
+                i = i + 1
             else:
-                articulos.append([cont_id, cont_articulos])
-                cont_id = resultado[i]
-                cont_articulos = 1
-                
-        articulos.append([cont_id, cont_articulos]) # Agregar el par ordenado faltante
+                if (cont_articulos >= 1):
+                    articulos.append([cont_id, cont_articulos]) # Agregar par ordenado
+                cont_id = resultado[i] # Cambiar al siguiente artículo
+                cont_articulos = 0
+
+        if (cont_articulos >= 1):
+            articulos.append([cont_id, cont_articulos]) # Agregar el par ordenado faltante
         
         try: #Abrir archivo de salida
-           salida = open(str(nom_archivo) + '_M_respFB', 'w')               
+            
+           if (algoritmo == 1): # Selecciona el formato del archivo según el algoritmo
+               terminacion = '_M_respFB'
+           elif (algoritmo == 2):
+               terminacion = '_M_respPD'
+               imprimir_matriz() #Imprime tabla final
+               print("")
+               
+           salida = open(str(nom_archivo) + terminacion, 'w')               
         except IOError:
             print ("Error: No se logró crear o sobrescribir el archivo\n")
         else:
@@ -236,7 +248,7 @@ def imprimir_salida_alineamiento():
     else:
         print ("Archivo creado o modificado exitosamente\n")
             
-        for elem in resultados:
+        for elem in resultados: # Imprime los empates
             if (elem[2] == scorefinal): # Imprimir sólo las comparaciones que empataron con el mejor puntaje
                 print("".join(elem[0]) + ", " + "".join(elem[1]) + ", " + str(elem[2])) # Imprimir en terminal
                 salida.write("".join(elem[0]) + ", " + "".join(elem[1]) + ", " + str(elem[2]) + "\n") # Guardar en archivo
@@ -433,9 +445,6 @@ def main():
                    if (resultados[i][0] > mejorcombinacion[0]): # Si hay una mejor solución
                        mejorcombinacion = copy.deepcopy(resultados[i])
 
-#               for i in range(len(mejorcombinacion)): # Imprimir el mejor resultado
-#                   print(str(mejorcombinacion[i]), end=' ')
-
                imprimir_salida_mochila(mejorcombinacion) # Guardar en archivo de salida
                        
 #---------------------------------------------------------------------------------------------------------------------------
@@ -449,10 +458,9 @@ def main():
                
                inicializar_matriz()
 
-               for k in range(1, len(lista_objetos)+1):
-                   for w in vector2:
-                       
-                       if (lista_objetos[k-1].get_peso() > w):
+               for k in range(1, len(lista_objetos)+1): # Algoritmo visto en clase
+                   for w in vector2:                      
+                       if (lista_objetos[k-1].get_peso() > w): # Si el peso del artículo es mayor que el peso en la tabla
                            matriz[k][w] = matriz[k-1][w]
                        else:
                            if (lista_objetos[k-1].get_beneficio() + matriz[k-1][w-lista_objetos[k-1].get_peso()] > matriz[k-1][w]):
@@ -461,28 +469,20 @@ def main():
                                matriz[k][w] = matriz[k-1][w]
 
                beneficio_max = matriz[len(matriz)-1][len(matriz[0])-1] # Obtener el beneficio máximo           
-               imprimir_matriz()
+
                tipos = [] # Lista de tipos de artículos a guardar
                i = len(matriz)-1
                k = len(matriz[0])-1
 
+               cont = i
                while (i > 0 and k >= 0): # Mientras no se hayan abarcado todas las filas, anotar cuáles artículos se añadieron a la mochila
-#                   print("#----------#-----------#")
-#                   print("i: "+str(i)+", k: "+str(k))
-#                   print(str(matriz[i][k])+" contra "+str(matriz[i-1][k]))
                    if (matriz[i][k] != matriz[i-1][k]): # Artículo añadido
                        tipos.append(lista_objetos[cont-1].get_tipo()) # Guardar el tipo del artículo
                        i = i - 1
                        k = k - lista_objetos[cont-1].get_peso()
-#                       print("Se añade artículo. Tipos: "+str(tipos))
-#                       print("Artículo--> "+lista_objetos[cont-1].__str__())
                    else: # No se incluyó el artículo
-#                       print("No se añadió nada...")
                        i = i - 1
                    cont = cont - 1
-#               print("#----------#-----------#")
-#               print("i: "+str(i)+", k: "+str(k))
-#               print("")
                        
                tipos.sort() # Ordenar ascendentemente los tipos de artículos
                mejor_resultado = [beneficio_max] + tipos
