@@ -159,14 +159,14 @@ def manual():
     print("\n")
     
 def inicializar_matriz():
-    #Función que inicializa la matriz con fracciones de la forma: 0/1
+    #Función que inicializa la matriz con enteros
     global matriz
     matriz=[] #Vaciar matriz
     
     for i in range(len(vector1)): #Total de filas
         row=[] #Fila
         for j in range(len(vector2)): #Total de columnas
-            row.append(Fraccion(0,1)) #Añadir Fracción 0/1 para cada columna de esta fila
+            row.append(0) #Añadir 0 para cada columna de esta fila
         matriz.append(row) #Añadir fila definida a la matriz
 
 def inicializar_matriz_nodos():
@@ -184,9 +184,9 @@ def imprimir_matriz():
     # Función que imprime en terminal la variable global matriz, en un formato más agradable
     for i in range(len(matriz)):
         for j in range(len(matriz[0])):
-            if (isinstance(matriz[0][0], Fraccion)): # Si el objeto es una fracción
-                print(matriz[i][j].__str__()+ " ", end = '')
-            elif (isinstance(matriz[0][0], Nodo)):  # Si el objeto es un nodo
+            if (isinstance(matriz[i][j], int)): # Si el objeto es un entero
+                print(str(matriz[i][j]) + " ", end = '')            
+            elif (isinstance(matriz[i][j], Nodo)):  # Si el objeto es un nodo
                 print(str(matriz[i][j].get_valor())+ " ", end = '')
         print("")
         
@@ -442,7 +442,52 @@ def main():
 #   Mochila (P.Dinámica)
 #---------------------------------------------------------------------------------------------------------------------------                  
            if (algoritmo == 2): # (P.Dinámica)
-               print("No implementado aún\n")
+               for i in range(len(lista_objetos)+1): # Construir el vector de los artículos (filas)
+                   vector1.append(i) 
+               for i in range(peso_max+1): # Construir el vector de los pesos (columnas)
+                   vector2.append(i)
+               
+               inicializar_matriz()
+
+               for k in range(1, len(lista_objetos)+1):
+                   for w in vector2:
+                       
+                       if (lista_objetos[k-1].get_peso() > w):
+                           matriz[k][w] = matriz[k-1][w]
+                       else:
+                           if (lista_objetos[k-1].get_beneficio() + matriz[k-1][w-lista_objetos[k-1].get_peso()] > matriz[k-1][w]):
+                               matriz[k][w] = lista_objetos[k-1].get_beneficio() + matriz[k-1][w-lista_objetos[k-1].get_peso()]
+                           else:
+                               matriz[k][w] = matriz[k-1][w]
+
+               beneficio_max = matriz[len(matriz)-1][len(matriz[0])-1] # Obtener el beneficio máximo           
+               imprimir_matriz()
+               tipos = [] # Lista de tipos de artículos a guardar
+               i = len(matriz)-1
+               k = len(matriz[0])-1
+
+               while (i > 0 and k >= 0): # Mientras no se hayan abarcado todas las filas, anotar cuáles artículos se añadieron a la mochila
+#                   print("#----------#-----------#")
+#                   print("i: "+str(i)+", k: "+str(k))
+#                   print(str(matriz[i][k])+" contra "+str(matriz[i-1][k]))
+                   if (matriz[i][k] != matriz[i-1][k]): # Artículo añadido
+                       tipos.append(lista_objetos[cont-1].get_tipo()) # Guardar el tipo del artículo
+                       i = i - 1
+                       k = k - lista_objetos[cont-1].get_peso()
+#                       print("Se añade artículo. Tipos: "+str(tipos))
+#                       print("Artículo--> "+lista_objetos[cont-1].__str__())
+                   else: # No se incluyó el artículo
+#                       print("No se añadió nada...")
+                       i = i - 1
+                   cont = cont - 1
+#               print("#----------#-----------#")
+#               print("i: "+str(i)+", k: "+str(k))
+#               print("")
+                       
+               tipos.sort() # Ordenar ascendentemente los tipos de artículos
+               mejor_resultado = [beneficio_max] + tipos
+               imprimir_salida_mochila(mejor_resultado) # Guardar en archivo de salida
+               
 ############################################################################################################################
 #---------------------------------------------------------------------------------------------------------------------------
 #   Ejecución alineamiento de secuencias
@@ -530,67 +575,48 @@ def main():
                    cont = cont + 2
 
                cont1 = 1
-               while (cont1 < len(vector1)):
+               while (cont1 < len(vector1)): # Asignar los nodos con el valor y direcciones respectivas con base en la fórmula
                    cont2 = 1
                    while (cont2 < len(vector2)):
-                       res1 = matriz[cont1 - 1][cont2 - 1].get_valor() + comparacion(cont1,cont2)
+                       res1 = matriz[cont1 - 1][cont2 - 1].get_valor() + comparacion(cont1,cont2) # Fórmula
                        res2 = matriz[cont1][cont2 - 1].get_valor() + -2
                        res3 = matriz[cont1 - 1][cont2].get_valor() + -2
                        vector = [res1, res2, res3]
                        
-                       mayor = max(res1, res2, res3)
+                       mayor = max(res1, res2, res3) # Guardar el resultado mayor
                        
-                       matriz[cont1][cont2] = Nodo(mayor,0,0,0)
+                       matriz[cont1][cont2] = Nodo(mayor,0,0,0) # Inicializar Nodo
                        for i in range(3):
-                           if (mayor == vector[i]):
+                           if (mayor == vector[i]): # Asignar las direcciones en el Nodo con base al resultado mayor
                                matriz[cont1][cont2].dir[i] = 1
                                                                    
                        cont2 = cont2 + 1
                        
                    cont1 = cont1 + 1
                    
-               imprimir_matriz() # Imprimir matriz
-               
-               print("")
-               for i in range(len(matriz)):
-                   for j in range(len(matriz[0])):
-                       if (isinstance(matriz[0][0], Fraccion)): # Si el objeto es una fracción
-                           print(matriz[i][j].__str__()+ " ", end = '')
-                       elif (isinstance(matriz[0][0], Nodo)):  # Si el objeto es un nodo
-                           print(str(matriz[i][j].get_valor())+"/"+str(matriz[i][j].get_dir()), end = '')
-                   print("")
-                   
                secuencia1 = ""
                secuencia2 = "" 
                cont1 = len(matriz) - 1
                cont2 = len(matriz[0]) - 1
-               print("\nvector1 = "+str(vector1))
-               print("vector2 = "+str(vector2)) 
-               while (cont1 > 0 or cont2 > 0):
-                   print("------------------------")
-                   print("vector1["+str(cont1)+"] = "+str(vector1[cont1])) 
-                   print("vector2["+str(cont2)+"] = "+str(vector2[cont2]))                             
-                   if (matriz[cont1][cont2].get_diagonal()==1):
-                       print("Diagonal: "+str(matriz[cont1][cont2].get_diagonal()))
+
+               while (cont1 > 0 or cont2 > 0): # Recorrer la ruta de la matriz (del final al inicio)
+                           
+                   if (matriz[cont1][cont2].get_diagonal()==1): # Se escoge el camino de la diagonal
                        secuencia1 = secuencia1 + vector2[cont2]
                        secuencia2 = secuencia2 + vector1[cont1]
                        cont1 = cont1 - 1
                        cont2 = cont2 - 1
-                   elif (matriz[cont1][cont2].get_izquierda()==1):
-                         print("Izquierda: "+str(matriz[cont1][cont2].get_izquierda()))                       
+                   elif (matriz[cont1][cont2].get_izquierda()==1): # Se escoge el camino de la izquierda                     
                          secuencia1 = secuencia1 + vector2[cont2]
                          secuencia2 = secuencia2 + "_"                        
-                         cont2 = cont2 - 1
-                   elif (matriz[cont1][cont2].get_arriba()==1):
-                         print("Arriba: "+str(matriz[cont1][cont2].get_arriba()))                        
+                         cont2 = cont2 - 1                       
+                   elif (matriz[cont1][cont2].get_arriba()==1): # Se escoge el camino de arriba                     
                          secuencia1 = secuencia1 + "_"
                          secuencia2 = secuencia2 + vector1[cont1]                        
                          cont1 = cont1 - 1
-                   print(secuencia1)
-                   print(secuencia2)
-                   print("------------------------")
 
-               secuencia1 = string_reverso(secuencia1)
+
+               secuencia1 = string_reverso(secuencia1) # Obtener el reverso de las secuencias
                secuencia2 = string_reverso(secuencia2)
 
                scorefinal = matriz[len(matriz)-1][len(matriz[0])-1].get_valor() # Obtener score final del alineamiento
