@@ -334,16 +334,16 @@ def string_reverso(s):
 def puntajetotal(elem1, elem2):
     # Función que retorna el puntaje correspondiente a comparar 2 secuencias (Para el algoritmo de fuerza bruta)
     score = 0
-    for i in range(len(elem1)):
-        if (elem1[i] == elem2[i] and elem1[i] != '_'):
+    for i in range(len(elem1)): # Se chequean las diferentes comparaciones
+        if (elem1[i] == elem2[i] and elem1[i] != '_'): # elem1 y elem2 son letras iguales
             score = score + 1
-        elif (elem1[i] != elem2[i] and elem1[i] != '_' and elem2[i] != '_'):
+        elif (elem1[i] != elem2[i] and elem1[i] != '_' and elem2[i] != '_'): # elem1 y elem2 son letras distintas
             score = score - 1
-        elif (elem1[i] == '_' and elem2[i] != '_'):
+        elif (elem1[i] == '_' and elem2[i] != '_'): # elem1 es gap pero elem2 no
             score = score - 2
-        elif (elem1[i] != '_' and elem2[i] == '_'):
+        elif (elem1[i] != '_' and elem2[i] == '_'): # elem1 no es gap pero elem2 sí
             score = score - 2
-        elif (elem1[i] == elem2[i] and elem1[i] == '_'):
+        elif (elem1[i] == elem2[i] and elem1[i] == '_'): # Ambos son gaps
             score = score - 4
     return score
 
@@ -351,7 +351,7 @@ def mejor_resultado():
     # Función que retorna una lista con la secuencia1 y la secuencia2 y la mayor puntuación
     resultado = copy.deepcopy(resultados[0])
     for i in range(len(resultados)):
-        if (resultados[i][2] > resultado[2]):
+        if (resultados[i][2] > resultado[2]): # Actualizar resultado
             resultado = copy.deepcopy(resultados[i])
             
     return resultado           
@@ -428,9 +428,9 @@ def main():
 #---------------------------------------------------------------------------------------------------------------------------
 ############################################################################################################################
        if (id_problema == 1): # Mochila
-           peso_max = int(lineas[0][0])
+           peso_max = int(lineas[0][0]) # Obtener peso máximo de la mochila
            cont = 1
-           while (cont < len(lineas)):
+           while (cont < len(lineas)): # Llenar una lista con artículos individuales en cada posición
                peso = int(lineas[cont][0])
                beneficio = int(lineas[cont][1])
                cantidad = int(lineas[cont][2])
@@ -527,7 +527,7 @@ def main():
                elem = str1.join(line)
                secuencias.append(elem.rstrip())
                
-           secuencia1 = secuencias[0]
+           secuencia1 = secuencias[0] # Asignar variables globales de secuencias
            secuencia2 = secuencias[1]
 #---------------------------------------------------------------------------------------------------------------------------
 #   Alineamiento de secuencias (F.Bruta)
