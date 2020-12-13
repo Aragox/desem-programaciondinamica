@@ -1,8 +1,7 @@
 #!/usr/bin/python3
 
 import sys
-from fractions import Fraction
-from decimal import Decimal
+import time
 import copy
 from itertools import combinations
 from itertools import permutations
@@ -164,16 +163,17 @@ def manual():
     print("\n'PARÁMETROS' del módulo 'generator' para el problema de la mochila:")
     print("\n    W N minPeso maxPeso minBeneficio maxBeneficio minCantidad maxCantidad\n")     
     print("Donde:")
-    print("- El parámetro 'W' es el peso soportado por la mochila.")
-    print("- El parámetro 'N' es la cantidad de elementos.")
-    print("- minPeso,maxPeso indica el valor mínimo y máximo para asignar el peso aleatorio a un elemento.")
-    print("- minBeneficio,maxBeneficio indica el valor mínimo y máximo para asignar el beneficio aleatorio a un elemento.")
-    print("- minCantidad,maxCantidad indica el valor mínimo y máximo para asignar la cantidad disponible de un elemento.")
+    print("- El parámetro 'W' es el peso soportado por la mochila (entero mayor o igual que 0).")
+    print("- El parámetro 'N' es la cantidad de elementos (entero mayor o igual que 1).")
+    print("- minPeso,maxPeso indica el valor mínimo y máximo para asignar el peso aleatorio a un elemento (entero mayor o igual que 0).")
+    print("- minBeneficio,maxBeneficio indica el valor mínimo y máximo para asignar el beneficio aleatorio a un elemento (entero mayor o igual que 0).")
+    print("- minCantidad,maxCantidad indica el valor mínimo y máximo para asignar la cantidad disponible de un elemento")
+    print("(entero mayor o igual que cero).")
     print("\n'PARÁMETROS' del módulo 'generator' para el problema del alineamiento de secuencias:")
     print("\n    largoH1 largoH2\n")     
     print("Donde:")
-    print("- El parámetro 'largoH1' es el largo de la hilera 1")
-    print("- El parámetro 'largoH2' es el largo de la hilera 2")
+    print("- El parámetro 'largoH1' es el largo de la hilera 1 (entero mayor o igual que 1)")
+    print("- El parámetro 'largoH2' es el largo de la hilera 2 (entero mayor o igual que 1)")
     print("\n")
     print("##########################################################################################################")
     print("----------------------------------------------------------------------------------------------------------")
@@ -245,8 +245,8 @@ def imprimir_salida_mochila(resultado):
                terminacion = '_M_respFB'
            elif (algoritmo == 2):
                terminacion = '_M_respPD'
-               imprimir_matriz() #Imprime tabla final
-               print("")
+#               imprimir_matriz() #Imprime tabla final
+#               print("")
                
            salida = open(str(nom_archivo) + terminacion, 'w')               
         except IOError:
@@ -437,7 +437,8 @@ def main():
                for i in range(cantidad):
                    lista_objetos.append(Articulo(cont,peso,beneficio))
                cont = cont + 1
-
+               
+           tiempoinicio = time.time() # Guardar tiempo de inicio para algoritmos de la mochila
 #---------------------------------------------------------------------------------------------------------------------------
 #   Mochila (F.Bruta)
 #---------------------------------------------------------------------------------------------------------------------------
@@ -469,6 +470,8 @@ def main():
                for i in range(len(resultados)): # Obtener el mejor resultado para el problema de la mochila
                    if (resultados[i][0] > mejorcombinacion[0]): # Si hay una mejor solución
                        mejorcombinacion = copy.deepcopy(resultados[i])
+
+               print("Tiempo de corrida: --- %s segundos ---" % (time.time() - tiempoinicio) + "\n") # Imprimir tiempo de corrida
 
                imprimir_salida_mochila(mejorcombinacion) # Guardar en archivo de salida
                        
@@ -508,10 +511,15 @@ def main():
                    else: # No se incluyó el artículo
                        i = i - 1
                    cont = cont - 1
-                       
-               tipos.sort() # Ordenar ascendentemente los tipos de artículos
-               mejor_resultado = [beneficio_max] + tipos
-               imprimir_salida_mochila(mejor_resultado) # Guardar en archivo de salida
+                   
+               mejor_res = []                 
+               if (tipos): # Si se agregaron artículos
+                   tipos.sort() # Ordenar ascendentemente los tipos de artículos
+                   mejor_res = [beneficio_max] + tipos
+                   
+               print("Tiempo de corrida: --- %s segundos ---" % (time.time() - tiempoinicio) + "\n") # Imprimir tiempo de corrida
+               
+               imprimir_salida_mochila(mejor_res) # Guardar en archivo de salida
                
 ############################################################################################################################
 #---------------------------------------------------------------------------------------------------------------------------
@@ -529,6 +537,8 @@ def main():
                
            secuencia1 = secuencias[0] # Asignar variables globales de secuencias
            secuencia2 = secuencias[1]
+
+           tiempoinicio = time.time() # Guardar tiempo de inicio para algoritmos del ordenamiento de secuencias
 #---------------------------------------------------------------------------------------------------------------------------
 #   Alineamiento de secuencias (F.Bruta)
 #---------------------------------------------------------------------------------------------------------------------------           
@@ -575,7 +585,9 @@ def main():
                secuencia1 = "".join(resfinal[0])
                secuencia2 = "".join(resfinal[1])
                scorefinal = resfinal[2]
-                   
+               
+               print("Tiempo de corrida: --- %s segundos ---" % (time.time() - tiempoinicio) + "\n") # Imprimir tiempo de corrida
+               
                imprimir_salida_alineamiento() # Guardar en archivo de salida 
 #---------------------------------------------------------------------------------------------------------------------------
 #   Alineamiento de secuencias (P.Dinámica)
@@ -645,6 +657,8 @@ def main():
                secuencia2 = string_reverso(secuencia2)
 
                scorefinal = matriz[len(matriz)-1][len(matriz[0])-1].get_valor() # Obtener score final del alineamiento
+
+               print("Tiempo de corrida: --- %s segundos ---" % (time.time() - tiempoinicio) + "\n") # Imprimir tiempo de corrida
 
                imprimir_salida_alineamiento2() # Guardar en archivo de salida 
 
